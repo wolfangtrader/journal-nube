@@ -520,11 +520,12 @@ async function doLogin() {
   const btn = document.getElementById('btn-login');
   btn.disabled = true; btn.textContent = 'Entrando...';
   const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Entrar';
   if(error) {
+    btn.disabled = false; btn.textContent = 'Entrar';
     authMsg(error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos' : error.message);
-  } else if(data?.user) {
-    await onLogin(data.user);
+  } else {
+    btn.textContent = '✓ Entrando...';
+    window.location.reload();
   }
 }
 async function doRegister() {
