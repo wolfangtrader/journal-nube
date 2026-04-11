@@ -554,30 +554,33 @@ async function doLogout() {
 // ── AUTH STATE ────────────────────────────────────────────────────────────────
 async function onLogin(user) {
   _authUser = user;
+  console.log('onLogin:', user.email, '_authUser set');
   document.getElementById('auth-screen').classList.remove('show');
   document.getElementById('user-info').classList.add('show');
   document.getElementById('user-email').textContent = user.email;
+  // Wait a tick to ensure _authUser is fully set before load reads from Supabase
+  await new Promise(r => setTimeout(r, 100));
   await load();
+  console.log('load done, entries:', Object.keys(entries).length);
 }
 
-let _loginDone = false;
+// Single entry point: only use getSession() on page load
+// onAuthStateChange only handles SIGNED_OUT to avoid double load()
 supa.auth.onAuthStateChange(async (event, session) => {
-  if(event === 'SIGNED_IN' && session?.user && !_loginDone) {
-    _loginDone = true;
-    await onLogin(session.user);
-  } else if(event === 'SIGNED_OUT') {
-    _loginDone = false;
+  console.log('auth event:', event);
+  if(event === 'SIGNED_OUT') {
     _authUser = null;
+    entries = {}; BASES = {}; accounts = []; activeAccounts = null;
     document.getElementById('auth-screen').classList.add('show');
     document.getElementById('user-info').classList.remove('show');
   }
 });
 
-// On page load, check for existing session
+// On page load: use getSession() as the ONLY trigger for onLogin
 (async () => {
-  // Wait for Supabase to restore session from localStorage
-  await new Promise(r => setTimeout(r, 500));
+  console.log('page load: checking session...');
   const { data: { session } } = await supa.auth.getSession();
+  console.log('session found:', !!session?.user);
   if(session?.user) {
     await onLogin(session.user);
   } else {
