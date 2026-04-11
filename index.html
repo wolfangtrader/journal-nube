@@ -519,9 +519,13 @@ async function doLogin() {
   if(!email||!pass) { authMsg('Ingresa correo y contraseña'); return; }
   const btn = document.getElementById('btn-login');
   btn.disabled = true; btn.textContent = 'Entrando...';
-  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false; btn.textContent = 'Entrar';
-  if(error) authMsg(error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos' : error.message);
+  if(error) {
+    authMsg(error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos' : error.message);
+  } else if(data?.user) {
+    await onLogin(data.user);
+  }
 }
 async function doRegister() {
   const email = document.getElementById('r-email').value.trim();
