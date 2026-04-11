@@ -560,10 +560,13 @@ async function onLogin(user) {
   await load();
 }
 
+let _loginDone = false;
 supa.auth.onAuthStateChange(async (event, session) => {
-  if(event === 'SIGNED_IN' && session?.user) {
+  if(event === 'SIGNED_IN' && session?.user && !_loginDone) {
+    _loginDone = true;
     await onLogin(session.user);
   } else if(event === 'SIGNED_OUT') {
+    _loginDone = false;
     _authUser = null;
     document.getElementById('auth-screen').classList.add('show');
     document.getElementById('user-info').classList.remove('show');
@@ -572,6 +575,8 @@ supa.auth.onAuthStateChange(async (event, session) => {
 
 // On page load, check for existing session
 (async () => {
+  // Wait for Supabase to restore session from localStorage
+  await new Promise(r => setTimeout(r, 500));
   const { data: { session } } = await supa.auth.getSession();
   if(session?.user) {
     await onLogin(session.user);
