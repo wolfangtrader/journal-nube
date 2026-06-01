@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WolfangTrader Journal</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -107,60 +106,11 @@ tr:hover td { background: var(--bg3); }
   .chart-row { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
-
-/* ── AUTH ────────────────────────────────────────────────────────────────── */
-#auth-screen { display:none; position:fixed; inset:0; background:var(--bg); z-index:9999; align-items:center; justify-content:center; }
-#auth-screen.show { display:flex; }
-.auth-box { background:var(--bg2); border:1px solid var(--border2); border-radius:18px; padding:40px 36px; width:380px; max-width:92vw; }
-.auth-logo { text-align:center; margin-bottom:28px; }
-.auth-tabs { display:flex; background:var(--bg3); border-radius:10px; padding:3px; margin-bottom:24px; }
-.auth-tab { flex:1; padding:8px; border:none; background:none; color:var(--text3); font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; }
-.auth-tab.active { background:var(--bg4); color:var(--text); }
-.auth-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
-.auth-field label { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); }
-.auth-field input { background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-size:14px; padding:10px 13px; border-radius:9px; outline:none; font-family:inherit; }
-.auth-field input:focus { border-color:var(--accent); }
-.auth-btn { width:100%; padding:11px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; }
-.auth-btn:disabled { opacity:.5; cursor:default; }
-.auth-msg { font-size:12px; text-align:center; margin-top:12px; min-height:18px; }
-.auth-forgot { font-size:11px; color:var(--text3); text-align:center; margin-top:10px; cursor:pointer; }
-.auth-forgot:hover { color:var(--accent); }
-#user-info { font-size:11px; color:var(--text3); padding:6px 10px; margin:6px 8px; background:var(--bg3); border-radius:7px; display:none; }
-#user-info.show { display:flex; align-items:center; justify-content:space-between; gap:6px; }
-#btn-logout { background:none; border:1px solid var(--border2); color:var(--text3); font-size:10px; padding:2px 7px; border-radius:5px; cursor:pointer; white-space:nowrap; }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
 </style>
 </head>
 <body>
-<!-- AUTH SCREEN -->
-<div id="auth-screen" class="show">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div style="font-size:36px">🐺</div>
-      <div style="font-size:17px;font-weight:700;margin-top:8px">WolfangTrader Journal</div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-top:3px">Trading Academy</div>
-    </div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="authTab('login')">Iniciar sesión</button>
-      <button class="auth-tab" onclick="authTab('register')">Registrarse</button>
-    </div>
-    <div id="auth-login">
-      <div class="auth-field"><label>Correo electrónico</label><input type="email" id="a-email" placeholder="tu@correo.com" autocomplete="email"></div>
-      <div class="auth-field"><label>Contraseña</label><input type="password" id="a-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <button class="auth-btn" id="btn-login" onclick="doLogin()">Entrar</button>
-      <div class="auth-forgot" onclick="doForgot()">¿Olvidaste tu contraseña?</div>
-    </div>
-    <div id="auth-register" style="display:none">
-      <div class="auth-field"><label>Correo electrónico</label><input type="email" id="r-email" placeholder="tu@correo.com"></div>
-      <div class="auth-field"><label>Contraseña (mín. 6 caracteres)</label><input type="password" id="r-pass" placeholder="••••••••"></div>
-      <div class="auth-field"><label>Confirmar contraseña</label><input type="password" id="r-pass2" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <button class="auth-btn" id="btn-register" onclick="doRegister()">Crear cuenta</button>
-    </div>
-    <div class="auth-msg" id="auth-msg"></div>
-  </div>
-</div>
-
 <div class="wrap">
 
 <div class="sidebar">
@@ -168,10 +118,6 @@ tr:hover td { background: var(--bg3); }
     <div class="brand-name">🐺 WolfangTrader Journal</div>
     <div class="brand-sub" id="brand-year">—</div>
     <div style="font-size:9px;color:var(--text3);text-align:center;padding:0 10px 8px;opacity:0.6;">v1.31 · Wolfang Veliz</div>
-  </div>
-    <div id="user-info">
-    <span id="user-email" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span>
-    <button id="btn-logout" onclick="doLogout()">Salir</button>
   </div>
   <div class="cap-block">
     <div class="cap-label" id="sb-year-label">Capital</div>
@@ -461,138 +407,18 @@ tr:hover td { background: var(--bg3); }
 
 <script>
 
-// ── SUPABASE ─────────────────────────────────────────────────────────────────
-const SUPA_URL = 'https://xulrcvxctbrseyugkpwr.supabase.co';
-const SUPA_KEY = 'sb_publishable_8pYZS5V9SxXirHupSso_UQ_qpcnvJU7';
-const supa = supabase.createClient(SUPA_URL, SUPA_KEY, {
-  auth: { persistSession: true, storage: localStorage, autoRefreshToken: true }
-});
-
-let _authUser = null;
-
-// Storage: Supabase when logged in, localStorage fallback
-window.storage = {
+// Storage polyfill: uses window.storage if available (claude.ai), else localStorage
+window.storage = window.storage || {
   get: async (key) => {
-    if (_authUser) {
-      try {
-        const { data } = await supa.from('user_storage')
-          .select('value').eq('user_id', _authUser.id).eq('key', key).maybeSingle();
-        return data ? { value: data.value } : null;
-      } catch(e) {}
-    }
     try { const v = localStorage.getItem(key); return v !== null ? { value: v } : null; } catch(e) { return null; }
   },
   set: async (key, value) => {
-    if (_authUser) {
-      try {
-        await supa.from('user_storage').upsert(
-          { user_id: _authUser.id, key, value, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id,key' }
-        );
-        return { value };
-      } catch(e) {}
-    }
     try { localStorage.setItem(key, value); return { value }; } catch(e) { return null; }
   },
   delete: async (key) => {
-    if (_authUser) {
-      try { await supa.from('user_storage').delete().eq('user_id', _authUser.id).eq('key', key); return { deleted: true }; } catch(e) {}
-    }
     try { localStorage.removeItem(key); return { deleted: true }; } catch(e) { return null; }
   }
 };
-
-// ── AUTH UI ───────────────────────────────────────────────────────────────────
-function authTab(tab) {
-  document.getElementById('auth-login').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('auth-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.querySelectorAll('.auth-tab').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
-  document.getElementById('auth-msg').textContent = '';
-}
-function authMsg(msg, color='var(--red)') {
-  const el = document.getElementById('auth-msg');
-  el.textContent = msg; el.style.color = color;
-}
-async function doLogin() {
-  const email = document.getElementById('a-email').value.trim();
-  const pass = document.getElementById('a-pass').value;
-  if(!email||!pass) { authMsg('Ingresa correo y contraseña'); return; }
-  const btn = document.getElementById('btn-login');
-  btn.disabled = true; btn.textContent = 'Entrando...';
-  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
-  if(error) {
-    btn.disabled = false; btn.textContent = 'Entrar';
-    authMsg(error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos' : error.message);
-  } else {
-    btn.textContent = '✓ Entrando...';
-    window.location.reload();
-  }
-}
-async function doRegister() {
-  const email = document.getElementById('r-email').value.trim();
-  const pass = document.getElementById('r-pass').value;
-  const pass2 = document.getElementById('r-pass2').value;
-  if(!email||!pass) { authMsg('Completa todos los campos'); return; }
-  if(pass !== pass2) { authMsg('Las contraseñas no coinciden'); return; }
-  if(pass.length < 6) { authMsg('Mínimo 6 caracteres'); return; }
-  const btn = document.getElementById('btn-register');
-  btn.disabled = true; btn.textContent = 'Creando...';
-  const { error } = await supa.auth.signUp({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Crear cuenta';
-  if(error) authMsg(error.message);
-  else authMsg('✓ Revisa tu correo para confirmar tu cuenta', 'var(--green)');
-}
-async function doForgot() {
-  const email = document.getElementById('a-email').value.trim();
-  if(!email) { authMsg('Ingresa tu correo primero'); return; }
-  await supa.auth.resetPasswordForEmail(email);
-  authMsg('✓ Email de recuperación enviado', 'var(--green)');
-}
-async function doLogout() {
-  await supa.auth.signOut();
-  _authUser = null;
-  entries = {}; BASES = {}; accounts = []; activeAccounts = null;
-  document.getElementById('user-info').classList.remove('show');
-  document.getElementById('auth-screen').classList.add('show');
-}
-
-// ── AUTH STATE ────────────────────────────────────────────────────────────────
-async function onLogin(user) {
-  _authUser = user;
-  console.log('onLogin:', user.email, '_authUser set');
-  document.getElementById('auth-screen').classList.remove('show');
-  document.getElementById('user-info').classList.add('show');
-  document.getElementById('user-email').textContent = user.email;
-  // Wait a tick to ensure _authUser is fully set before load reads from Supabase
-  await new Promise(r => setTimeout(r, 100));
-  await load();
-  console.log('load done, entries:', Object.keys(entries).length);
-}
-
-// Single entry point: only use getSession() on page load
-// onAuthStateChange only handles SIGNED_OUT to avoid double load()
-supa.auth.onAuthStateChange(async (event, session) => {
-  console.log('auth event:', event);
-  if(event === 'SIGNED_OUT') {
-    _authUser = null;
-    entries = {}; BASES = {}; accounts = []; activeAccounts = null;
-    document.getElementById('auth-screen').classList.add('show');
-    document.getElementById('user-info').classList.remove('show');
-  }
-});
-
-// On page load: use getSession() as the ONLY trigger for onLogin
-(async () => {
-  console.log('page load: checking session...');
-  const { data: { session } } = await supa.auth.getSession();
-  console.log('session found:', !!session?.user);
-  if(session?.user) {
-    await onLogin(session.user);
-  } else {
-    document.getElementById('auth-screen').classList.add('show');
-  }
-})();
-
 
 
 // ── Internationalization ──────────────────────────────────────────────────────
@@ -1562,6 +1388,7 @@ function renderDashboard() {
 
   const opt = (fmt) => ({
     responsive:true, maintainAspectRatio:false,
+    layout:{ padding:{ top:18, bottom:0 } },
     plugins:{legend:{display:false}},
     scales:{
       x:{ticks:{color:'#454a5a',font:{size:10},maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}},
@@ -1633,26 +1460,84 @@ function renderDashboard() {
   // Prev year monthly PL
   const mplPrev = Array(12).fill(null);
   prevSorted.forEach(([k,v])=>{ const mi=parseInt(k.slice(5,7))-1; mplPrev[mi]=(mplPrev[mi]||0)+v; });
-  const monthDatasets = [{
-    type:'bar', data:mpl,
-    backgroundColor:mpl.map(v=>v>=0?'rgba(61,214,140,0.7)':'rgba(245,101,101,0.65)'),
-    borderRadius:4, label:dashYear
-  }];
+  // Prev year line goes FIRST (renders behind bars)
+  const monthDatasets = [];
   if(hasPrevData2) monthDatasets.push({
     type:'line', data:mplPrev,
-    borderColor:'#f6ad55', backgroundColor:'transparent',
-    pointBackgroundColor:'#f6ad55', pointRadius:3, borderWidth:2,
-    tension:0.3, label:prevYear2, spanGaps:true
+    borderColor:'rgba(246,173,85,0.7)', backgroundColor:'transparent',
+    pointBackgroundColor:'rgba(246,173,85,0.7)', pointRadius:2, borderWidth:1.5,
+    tension:0.3, label:prevYear2, spanGaps:true, order:2
+  });
+  monthDatasets.push({
+    type:'bar', data:mpl,
+    backgroundColor:mpl.map(v=>v>=0?'rgba(61,214,140,0.7)':'rgba(245,101,101,0.65)'),
+    borderRadius:4, label:dashYear, order:1
   });
   const monthOpts = {
-    ...opt(v=>'$'+Math.round(v).toLocaleString('en-US')),
-    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:i=>' '+fmtSigned$(i.raw)}} },
-    onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+    responsive:true, maintainAspectRatio:false,
+    layout:{ padding:{ top:18, bottom:0 } },
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        mode: 'index',
+        intersect: false,
+        callbacks:{
+          title: items => tMonths()[items[0].dataIndex],
+          label: i => {
+            if(i.raw === null || i.raw === undefined || i.raw === 0) return null;
+            const isBar = i.dataset.type==='bar' || !i.dataset.type || i.dataset.order===1;
+            if(!isBar) {
+              return ['  '+(LANG==='en'?'Last year':'Año pasado'), '  '+fmtSigned$(i.raw)];
+            }
+            const pct = BASE > 0 ? (Math.abs(i.raw)/BASE*100).toFixed(2) : '0.00';
+            const sign = i.raw >= 0 ? '+' : '-';
+            return ['  '+(LANG==='en'?'This year':'Año actual'), '  '+fmtSigned$(i.raw)+'  ('+sign+pct+'%)'];
+          },
+          filter: item => item.raw !== null && item.raw !== undefined && item.raw !== 0,
+          labelColor: i => {
+            const isBar = i.dataset.type==='bar' || !i.dataset.type || i.dataset.order===1;
+            if(!isBar) return { borderColor:'#f6ad55', backgroundColor:'#f6ad55' };
+            return { borderColor: i.raw>=0?'#3dd68c':'#f56565', backgroundColor: i.raw>=0?'#3dd68c':'#f56565' };
+          }
+        }
+      }
+    },
+    onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+    scales:{
+      x:{ticks:{color:'#454a5a',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}},
+      y:{ticks:{color:'#454a5a',font:{size:10},callback:v=>'$'+Math.round(v).toLocaleString('en-US')},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
+    }
+  };
+  const pctPlugin = {
+    id: 'monthPct',
+    afterDatasetsDraw(chart) {
+      // Find the bar dataset (order:1 = last in array now)
+      const barIdx = chart.data.datasets.findIndex(d=>d.type==='bar'||!d.type);
+      const ds = chart.data.datasets[barIdx];
+      if(!ds) return;
+      const ctx2 = chart.ctx;
+      const meta = chart.getDatasetMeta(barIdx);
+      ctx2.save();
+      ctx2.font = '600 9px sans-serif';
+      ctx2.textAlign = 'center';
+      meta.data.forEach((bar, i) => {
+        const val = ds.data[i];
+        if(!val) return;
+        const pct = BASE > 0 ? (Math.abs(val)/BASE*100).toFixed(2) : '0.00';
+        const label = (val>=0?'+':'-')+pct+'%';
+        ctx2.fillStyle = val >= 0 ? '#3dd68c' : '#f56565';
+        // Above for positive, below for negative — with enough padding
+        const yPos = val >= 0 ? bar.y - 6 : bar.y + 14;
+        ctx2.fillText(label, bar.x, yPos);
+      });
+      ctx2.restore();
+    }
   };
   charts.month = new Chart(document.getElementById('c-month'),{
     type:'bar',
     data:{labels:tMonthsShort(), datasets:monthDatasets},
-    options: monthOpts
+    options: monthOpts,
+    plugins: [pctPlugin]
   });
   // Click on bar → go to that month in Registro
   document.getElementById('c-month').onclick = function(e) {
@@ -1672,21 +1557,53 @@ function renderDashboard() {
   prevSorted.forEach(([k,v])=>{ const l=isoWeekLabel(k); weekMapPrev[l]=(weekMapPrev[l]||0)+v; });
   // Align prev year weeks to same labels
   const wDataPrev = wLabels.map(l => weekMapPrev[l] ?? null);
-  const weeklyDatasets = [{
-    type:'bar', data:wData,
-    backgroundColor:wData.map(v=>v>=0?'rgba(61,214,140,0.7)':'rgba(245,101,101,0.65)'),
-    borderRadius:4, label:dashYear
-  }];
+  // Prev year line behind bars
+  const weeklyDatasets = [];
   if(hasPrevData2) weeklyDatasets.push({
     type:'line', data:wDataPrev,
-    borderColor:'#f6ad55', backgroundColor:'transparent',
-    pointBackgroundColor:'#f6ad55', pointRadius:3, borderWidth:2,
-    tension:0.3, label:prevYear2, spanGaps:false
+    borderColor:'rgba(246,173,85,0.7)', backgroundColor:'transparent',
+    pointBackgroundColor:'rgba(246,173,85,0.7)', pointRadius:2, borderWidth:1.5,
+    tension:0.3, label:prevYear2, spanGaps:false, order:2
   });
+  weeklyDatasets.push({
+    type:'bar', data:wData,
+    backgroundColor:wData.map(v=>v>=0?'rgba(61,214,140,0.7)':'rgba(245,101,101,0.65)'),
+    borderRadius:4, label:dashYear, order:1
+  });
+
   charts.weekly = new Chart(document.getElementById('c-weekly'),{
     type:'bar',
     data:{labels:wLabels, datasets:weeklyDatasets},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#454a5a',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:16},grid:{display:false},border:{display:false}},y:{ticks:{color:'#454a5a',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          mode:'index', intersect:false,
+          callbacks:{
+            title: items => items[0].label,
+            label: i => {
+              if(i.raw===null||i.raw===undefined||i.raw===0) return null;
+              const isBar = i.dataset.order===1;
+              if(!isBar) return ['  '+(LANG==='en'?'Last year':'Año pasado'),'  '+fmtSigned$(i.raw)];
+              const pct = BASE>0?(Math.abs(i.raw)/BASE*100).toFixed(2):'0.00';
+              const sign = i.raw>=0?'+':'-';
+              return ['  '+(LANG==='en'?'This year':'Año actual'),'  '+fmtSigned$(i.raw)+'  ('+sign+pct+'%)'];
+            },
+            filter: item => item.raw!==null&&item.raw!==undefined&&item.raw!==0,
+            labelColor: i => {
+              const isBar = i.dataset.order===1;
+              if(!isBar) return {borderColor:'#f6ad55',backgroundColor:'#f6ad55'};
+              return {borderColor:i.raw>=0?'#3dd68c':'#f56565',backgroundColor:i.raw>=0?'#3dd68c':'#f56565'};
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#454a5a',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:16},grid:{display:false},border:{display:false}},
+        y:{ticks:{color:'#454a5a',font:{size:10},callback:v=>'$'+Math.round(v).toLocaleString('en-US')},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
+      }
+    },
   });
 
   // Prev year daily aligned by MM-DD
@@ -2429,7 +2346,7 @@ ntDrop.addEventListener('drop', e=>{
   reader.readAsText(f);
 });
 
-// load() called by auth
+load();
 </script>
 </body>
 </html>
